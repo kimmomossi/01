@@ -5,52 +5,48 @@
   <title>생년월일 일주 계산</title>
 </head>
 <body>
-  <h1>일주 계산</h1>
+  <h1>천간(일간) 계산</h1>
   <label for="birthdate">생년월일 (YYYY-MM-DD): </label>
   <input type="date" id="birthdate">
-  <button onclick="calculateIlju()">계산</button>
+  <button onclick="calculateHeavenlyStem()">계산</button>
   <p id="result"></p>
 
   <script>
-    // 일주(일간+일지)는 10간(갑, 을, 병, 정, 무, 기, 경, 신, 임, 계)과
-    // 12지(자, 축, 인, 묘, 진, 사, 오, 미, 신, 유, 술, 해)가 결합된 60갑자의 1일 주기입니다.
-    // 참고로 코드 상에서 1900-01-31을 갑자일로 간주한 간단 계산 예시입니다.
-    // 실제 사주 이론에서는 24절기 기준, 시주 계산, 윤달 등 세부적인 계산이 더 복잡할 수 있으므로,
-    // 이 예시는 간단 참고용으로만 사용하십시오.
+    // 간단한 천간만 계산하는 예시
+    // 1982-09-06 -> '임'이 나오도록 구현
+    // 실제 사주 이론(시주, 24절기, 윤달, 지역차 등)과는 다를 수 있습니다.
 
-    function getDayPillar(dateObj) {
-      // 기준 날짜(1900-01-31)를 갑자일로 가정
+    function getHeavenlyStem(dateObj) {
+      // 기준 날짜(1900-01-31)를 갑자일로 간주
       const reference = new Date(1900, 0, 31);
-      // 기준 날짜와의 일 수 차이를 구함
+      // 기준 날짜와의 일 수 차이를 계산
       let diff = Math.floor((dateObj - reference) / (1000 * 60 * 60 * 24));
 
-      // 10간, 12지 배열
+      // 10간 배열
       const heavenlyStems = ["갑","을","병","정","무","기","경","신","임","계"];
-      const earthlyBranches = ["자","축","인","묘","진","사","오","미","신","유","술","해"];
 
-      // 60갑자 주기로 계산
-      let dayIndex = (diff % 60 + 60) % 60; // 음수 보정
+      // 60갑자 주기로 계산 (음수 모듈로 보정)
+      let dayIndex = (diff % 60 + 60) % 60;
 
-      let stem = heavenlyStems[dayIndex % 10];
-      let branch = earthlyBranches[dayIndex % 12];
-
-      return stem + branch;
+      // 천간만 추출
+      return heavenlyStems[dayIndex % 10];
     }
 
-    function calculateIlju() {
+    function calculateHeavenlyStem() {
       const birthdateValue = document.getElementById("birthdate").value;
       if (!birthdateValue) {
         alert("생년월일을 입력하세요.");
         return;
       }
-      // 사용자가 입력한 birthdateValue(YYYY-MM-DD)로 Date 객체 생성
+      // 사용자 입력(YYYY-MM-DD)으로 Date 객체를 생성
       const dateObj = new Date(birthdateValue);
 
-      // 일주 계산
-      const ilju = getDayPillar(dateObj);
+      // 천간 계산
+      const stem = getHeavenlyStem(dateObj);
 
       // 결과 출력
-      document.getElementById("result").textContent = "당신의 일주는 " + ilju + " 입니다.";
+      document.getElementById("result").textContent =
+        "당신의 일주(천간)은 " + stem + " 입니다.";
     }
   </script>
 </body>
