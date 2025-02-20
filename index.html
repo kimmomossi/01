@@ -1,73 +1,57 @@
-ㅣ<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>정확한 일간 계산기</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        table {
-            width: 50%;
-            margin: 20px auto;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-    </style>
-    <script>
-        function calculateDayStem() {
-            let birthDateInput = document.getElementById("birthDate").value;
-            if (!/^\d{8}$/.test(birthDateInput)) {
-                alert("생년월일을 YYYYMMDD 형식으로 입력하세요.");
-                return;
-            }
-
-            let birthYear = parseInt(birthDateInput.substring(0, 4));
-            let birthMonth = parseInt(birthDateInput.substring(4, 6));
-            let birthDay = parseInt(birthDateInput.substring(6, 8));
-
-            let dayStem = getAccurateDayStem(birthYear, birthMonth, birthDay);
-
-            document.getElementById("dayStemCell").innerText = dayStem;
-        }
-
-        function getAccurateDayStem(year, month, day) {
-            const heavenlyStems = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
-
-            // 정확한 일주 계산을 위한 공식 (기준일: 1899년 12월 31일)
-            let baseDate = new Date(1899, 11, 31);
-            let inputDate = new Date(year, month - 1, day);
-            let dayDifference = Math.floor((inputDate - baseDate) / (1000 * 60 * 60 * 24));
-
-            let dayStem = heavenlyStems[(dayDifference + 9) % 10];
-
-            return dayStem;
-        }
-    </script>
+  <meta charset="UTF-8">
+  <title>생년월일 일주 계산</title>
 </head>
 <body>
-    <h2>정확한 일간(천간) 계산기</h2>
-    <label for="birthDate">생년월일 입력 (YYYYMMDD 형식):</label>
-    <input type="text" id="birthDate" maxlength="8" placeholder="예: 20250101">
-    <button onclick="calculateDayStem()">결과 확인</button>
+  <h1>일주 계산</h1>
+  <label for="birthdate">생년월일 (YYYY-MM-DD): </label>
+  <input type="date" id="birthdate">
+  <button onclick="calculateIlju()">계산</button>
+  <p id="result"></p>
 
-    <h3>결과:</h3>
-    <table>
-        <tr>
-            <th>일간 (천간)</th>
-        </tr>
-        <tr>
-            <td id="dayStemCell"></td>
-        </tr>
-    </table>
+  <script>
+    // 일주(일간+일지)는 10간(갑, 을, 병, 정, 무, 기, 경, 신, 임, 계)과
+    // 12지(자, 축, 인, 묘, 진, 사, 오, 미, 신, 유, 술, 해)가 결합된 60갑자의 1일 주기입니다.
+    // 참고로 코드 상에서 1900-01-31을 갑자일로 간주한 간단 계산 예시입니다.
+    // 실제 사주 이론에서는 24절기 기준, 시주 계산, 윤달 등 세부적인 계산이 더 복잡할 수 있으므로,
+    // 이 예시는 간단 참고용으로만 사용하십시오.
+
+    function getDayPillar(dateObj) {
+      // 기준 날짜(1900-01-31)를 갑자일로 가정
+      const reference = new Date(1900, 0, 31);
+      // 기준 날짜와의 일 수 차이를 구함
+      let diff = Math.floor((dateObj - reference) / (1000 * 60 * 60 * 24));
+
+      // 10간, 12지 배열
+      const heavenlyStems = ["갑","을","병","정","무","기","경","신","임","계"];
+      const earthlyBranches = ["자","축","인","묘","진","사","오","미","신","유","술","해"];
+
+      // 60갑자 주기로 계산
+      let dayIndex = (diff % 60 + 60) % 60; // 음수 보정
+
+      let stem = heavenlyStems[dayIndex % 10];
+      let branch = earthlyBranches[dayIndex % 12];
+
+      return stem + branch;
+    }
+
+    function calculateIlju() {
+      const birthdateValue = document.getElementById("birthdate").value;
+      if (!birthdateValue) {
+        alert("생년월일을 입력하세요.");
+        return;
+      }
+      // 사용자가 입력한 birthdateValue(YYYY-MM-DD)로 Date 객체 생성
+      const dateObj = new Date(birthdateValue);
+
+      // 일주 계산
+      const ilju = getDayPillar(dateObj);
+
+      // 결과 출력
+      document.getElementById("result").textContent = "당신의 일주는 " + ilju + " 입니다.";
+    }
+  </script>
 </body>
 </html>
