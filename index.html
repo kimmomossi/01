@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>체질판별 + 일주(일간) 추가</title>
+    <title>체질판별</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,9 +32,9 @@
         }
     </style>
     <script>
-        // (A) 기존 체질판별 로직: 절대 변경 X
-        // =================================
-
+        /************************************************************
+         *  [기존 코드] 기존 체질판별 로직. 절대로 수정하지 않습니다.
+         ************************************************************/
         function calculateResults() {
             let birthDateInput = document.getElementById("birthDate").value;
             if (!/^\d{8}$/.test(birthDateInput)) {
@@ -52,71 +52,50 @@
 
             let conceptionYear = conceptionDate.getFullYear();
 
-            // 1) 연간(년도 천간)
             let birthHeavenlyStem = getHeavenlyStem(birthYear);
             let conceptionHeavenlyStem = getHeavenlyStem(conceptionYear);
 
-            // 2) 운 (월/일)
             let birthLuck = getLuck(birthDate);
             let conceptionLuck = getLuck(conceptionDate);
 
-            // 3) 오행 (연간 + 운)
             let birthElement = getFiveElements(birthHeavenlyStem, birthLuck);
             let conceptionElement = getFiveElements(conceptionHeavenlyStem, conceptionLuck);
 
-            // 4) 태과/불급 (연간)
             let birthImbalance = getImbalance(birthHeavenlyStem);
             let conceptionImbalance = getImbalance(conceptionHeavenlyStem);
 
-            // 5) 체질 (오행 + 태과/불급)
             let birthConstitution = getConstitution(birthElement, birthImbalance);
             let conceptionConstitution = getConstitution(conceptionElement, conceptionImbalance);
 
-            // (B) 새로 추가: 일주(일간) 계산
-            let birthDayPillar = getHeavenlyStemDay(birthDate);
-            let conceptionDayPillar = getHeavenlyStemDay(conceptionDate);
-
-            // === 결과를 표에 반영 ===
-            // 날짜
-            document.getElementById("birthDateCell").innerText
-                = `${birthYear}년 ${birthMonth}월 ${birthDay}일`;
-            document.getElementById("conceptionDateCell").innerText
-                = `${conceptionYear}년 ${conceptionDate.getMonth() + 1}월 ${conceptionDate.getDate()}일`;
-
-            // 천간
+            // 결과를 표에 업데이트
+            document.getElementById("birthDateCell").innerText =
+                `${birthYear}년 ${birthMonth}월 ${birthDay}일`;
+            document.getElementById("conceptionDateCell").innerText =
+                `${conceptionYear}년 ${conceptionDate.getMonth() + 1}월 ${conceptionDate.getDate()}일`;
             document.getElementById("birthHeavenlyStemCell").innerText = birthHeavenlyStem;
             document.getElementById("conceptionHeavenlyStemCell").innerText = conceptionHeavenlyStem;
-
-            // 운
             document.getElementById("birthLuckCell").innerText = birthLuck + "운";
             document.getElementById("conceptionLuckCell").innerText = conceptionLuck + "운";
-
-            // 오행
             document.getElementById("birthElementCell").innerText = birthElement;
             document.getElementById("conceptionElementCell").innerText = conceptionElement;
-
-            // 태과/불급
             document.getElementById("birthImbalanceCell").innerText = birthImbalance;
             document.getElementById("conceptionImbalanceCell").innerText = conceptionImbalance;
-
-            // 체질
             document.getElementById("birthConstitutionCell").innerText = birthConstitution;
             document.getElementById("conceptionConstitutionCell").innerText = conceptionConstitution;
 
-            // 일주(일간)
+            /***************************************************************
+             *  [새로 추가] 출생일 일주(천간)만 따로 계산해서 표 맨 밑 추가
+             ***************************************************************/
+            let birthDayPillar = getBirthDayPillar(birthYear, birthMonth, birthDay);
             document.getElementById("birthDayPillarCell").innerText = birthDayPillar;
-            document.getElementById("conceptionDayPillarCell").innerText = conceptionDayPillar;
         }
 
-        // ========== 기존 로직 (수정 불가) ==========
-
-        // 년도 기준 천간
+        // ===== [기존 함수들] 수정하지 않음 =====
         function getHeavenlyStem(year) {
             const heavenlyStems = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
             return heavenlyStems[(year - 4) % 10];
         }
 
-        // 달/일 기준 운
         function getLuck(date) {
             let month = date.getMonth() + 1;
             let day = date.getDate();
@@ -144,7 +123,6 @@
             return "오류";
         }
 
-        // 오행
         function getFiveElements(heavenlyStem, luck) {
             const startingElements = {
                 "갑": "土", "기": "土",
@@ -161,14 +139,12 @@
             return cycle[(startIndex + luck - 1) % 5];
         }
 
-        // 태과/불급
         function getImbalance(heavenlyStem) {
             return ["갑", "병", "무", "경", "임"].includes(heavenlyStem)
                 ? "태과"
                 : "불급";
         }
 
-        // 체질
         function getConstitution(fiveElements, imbalance) {
             const mapping = {
                 "木": { "태과": "간실비허", "불급": "폐실간허" },
@@ -180,25 +156,31 @@
             return mapping[fiveElements][imbalance];
         }
 
-        // ========== (B) 새로 추가: 일주(일간) 계산 (수정 가능) ==========
-
-        // 1900-01-31을 '갑자일'로 가정
-        // 1982-09-06 => '임'이 되도록
-        function getHeavenlyStemDay(dateObj) {
-            const reference = new Date(1900, 0, 31);
+        /************************************************************
+         * [새 함수] 출생일 일주(천간)만 계산
+         *   - 1900-01-31을 '갑자일'로 간주
+         *   - 지지(자,축…)는 붙이지 않고 천간만 돌려줍니다.
+         ************************************************************/
+        function getBirthDayPillar(year, month, day) {
+            const reference = new Date(1900, 0, 31); // 1900-01-31
+            const dateObj = new Date(year, month - 1, day);
             let diff = Math.floor((dateObj - reference) / (1000 * 60 * 60 * 24));
 
-            const stems = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
-            // 60갑자 주기, 음수 보정을 위해 + 60 한 뒤 % 60
+            // 10간 배열
+            const heavenlyStems = ["갑","을","병","정","무","기","경","신","임","계"];
+
+            // 60갑자 모듈로 (음수 보정)
             let dayIndex = (diff % 60 + 60) % 60;
-            return stems[dayIndex % 10];
+            let dayStem = heavenlyStems[dayIndex % 10];
+
+            return dayStem; // 천간만 반환
         }
     </script>
 </head>
 <body>
     <h2>체질판별</h2>
     <label for="birthDate">생년월일(양력) 입력 (YYYYMMDD 형식):</label>
-    <input type="text" id="birthDate" maxlength="8" placeholder="예: 19820906" />
+    <input type="text" id="birthDate" maxlength="8" placeholder="예: 19820906">
     <button onclick="calculateResults()">결과 확인</button>
 
     <h3>결과:</h3>
@@ -238,10 +220,11 @@
             <td id="birthConstitutionCell"></td>
             <td id="conceptionConstitutionCell"></td>
         </tr>
+        <!-- [새로운 행] 출생일 일주(천간) -->
         <tr>
-            <td>일주(일간)</td>
+            <td>출생일 일주(천간)</td>
             <td id="birthDayPillarCell"></td>
-            <td id="conceptionDayPillarCell"></td>
+            <td></td>
         </tr>
     </table>
 </body>
