@@ -1,231 +1,88 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>체질판별</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        table {
-            width: 80%;
-            margin: 20px auto;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .highlight {
-            background-color: yellow;
-            font-weight: bold;
-        }
-        .category {
-            background-color: #ffcc00;
-            font-weight: bold;
-        }
-    </style>
-    <script>
-        /************************************************************
-         *  [기존 코드] 기존 체질판별 로직. 절대로 수정하지 않습니다.
-         ************************************************************/
-        function calculateResults() {
-            let birthDateInput = document.getElementById("birthDate").value;
-            if (!/^\d{8}$/.test(birthDateInput)) {
-                alert("생년월일(양력)을 YYYYMMDD 형식으로 입력하세요.");
-                return;
-            }
+  <meta charset="UTF-8" />
+  <title>간지력 라이브러리 예시</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    table {
+      width: 50%;
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
 
-            let birthYear = parseInt(birthDateInput.substring(0, 4));
-            let birthMonth = parseInt(birthDateInput.substring(4, 6));
-            let birthDay = parseInt(birthDateInput.substring(6, 8));
+  <!-- GanZhiJS 라이브러리 (CDN) -->
+  <script src="https://cdn.jsdelivr.net/gh/jxlwqq/GanZhiJS/dist/ganzhi.min.js"></script>
+  <script>
+    function calculateDayStemBranch() {
+      const birthDateInput = document.getElementById("birthDate").value;
+      if (!/^\d{8}$/.test(birthDateInput)) {
+        alert("생년월일(양력)을 YYYYMMDD 형식으로 입력하세요.");
+        return;
+      }
 
-            let birthDate = new Date(birthYear, birthMonth - 1, birthDay);
-            let conceptionDate = new Date(birthDate);
-            conceptionDate.setDate(conceptionDate.getDate() - 266); // 266일 빼기
+      // 입력값 파싱
+      const birthYear = parseInt(birthDateInput.substring(0, 4));
+      const birthMonth = parseInt(birthDateInput.substring(4, 6));
+      const birthDay = parseInt(birthDateInput.substring(6, 8));
 
-            let conceptionYear = conceptionDate.getFullYear();
+      // GanZhiJS 사용: solar2lunar(년, 월, 일)
+      // - ganZhiDay 속성에 '임술' 같은 간지 정보가 들어있음
+      const result = GanZhiJS.solar2lunar(birthYear, birthMonth, birthDay);
+      // 예: result.ganZhiDay → "壬戌" (중국어 간지 표기)
+      //    "임술" 형태로 직접 표기하고 싶으면 수동 변환이 필요할 수 있음
 
-            let birthHeavenlyStem = getHeavenlyStem(birthYear);
-            let conceptionHeavenlyStem = getHeavenlyStem(conceptionYear);
+      // result.ganZhiDay 예: "壬戌"
+      // 한국어 표기 "임술"로 바꾸려면?
+      // - '壬' → '임', '戌' → '술' 매핑 테이블이 필요
+      const dayGanZhi = result.ganZhiDay; // 예: "壬戌"
 
-            let birthLuck = getLuck(birthDate);
-            let conceptionLuck = getLuck(conceptionDate);
+      // 한자 → 한글 치환용 매핑 (간단 예시)
+      const dayGanMap = {
+        "甲": "갑", "乙": "을", "丙": "병", "丁": "정", "戊": "무",
+        "己": "기", "庚": "경", "辛": "신", "壬": "임", "癸": "계"
+      };
+      const dayZhiMap = {
+        "子": "자", "丑": "축", "寅": "인", "卯": "묘", "辰": "진",
+        "巳": "사", "午": "오", "未": "미", "申": "신", "酉": "유",
+        "戌": "술", "亥": "해"
+      };
 
-            let birthElement = getFiveElements(birthHeavenlyStem, birthLuck);
-            let conceptionElement = getFiveElements(conceptionHeavenlyStem, conceptionLuck);
+      // 예: "壬戌" → '壬' + '戌'
+      const stem = dayGanMap[ dayGanZhi[0] ] || dayGanZhi[0];
+      const branch = dayGanMap[ dayGanZhi[1] ] || dayZhiMap[ dayGanZhi[1] ] || dayGanZhi[1];
 
-            let birthImbalance = getImbalance(birthHeavenlyStem);
-            let conceptionImbalance = getImbalance(conceptionHeavenlyStem);
-
-            let birthConstitution = getConstitution(birthElement, birthImbalance);
-            let conceptionConstitution = getConstitution(conceptionElement, conceptionImbalance);
-
-            // 결과를 표에 업데이트
-            document.getElementById("birthDateCell").innerText =
-                `${birthYear}년 ${birthMonth}월 ${birthDay}일`;
-            document.getElementById("conceptionDateCell").innerText =
-                `${conceptionYear}년 ${conceptionDate.getMonth() + 1}월 ${conceptionDate.getDate()}일`;
-            document.getElementById("birthHeavenlyStemCell").innerText = birthHeavenlyStem;
-            document.getElementById("conceptionHeavenlyStemCell").innerText = conceptionHeavenlyStem;
-            document.getElementById("birthLuckCell").innerText = birthLuck + "운";
-            document.getElementById("conceptionLuckCell").innerText = conceptionLuck + "운";
-            document.getElementById("birthElementCell").innerText = birthElement;
-            document.getElementById("conceptionElementCell").innerText = conceptionElement;
-            document.getElementById("birthImbalanceCell").innerText = birthImbalance;
-            document.getElementById("conceptionImbalanceCell").innerText = conceptionImbalance;
-            document.getElementById("birthConstitutionCell").innerText = birthConstitution;
-            document.getElementById("conceptionConstitutionCell").innerText = conceptionConstitution;
-
-            /***************************************************************
-             *  [새로 추가] 출생일 일주(천간)만 따로 계산해서 표 맨 밑 추가
-             ***************************************************************/
-            let birthDayPillar = getBirthDayPillar(birthYear, birthMonth, birthDay);
-            document.getElementById("birthDayPillarCell").innerText = birthDayPillar;
-        }
-
-        // ===== [기존 함수들] 수정하지 않음 =====
-        function getHeavenlyStem(year) {
-            const heavenlyStems = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
-            return heavenlyStems[(year - 4) % 10];
-        }
-
-        function getLuck(date) {
-            let month = date.getMonth() + 1;
-            let day = date.getDate();
-
-            let luckPeriods = [
-                { start: "0120", end: "0401", luck: 1 },
-                { start: "0402", end: "0616", luck: 2 },
-                { start: "0617", end: "0829", luck: 3 },
-                { start: "0830", end: "1110", luck: 4 },
-                { start: "1111", end: "0119", luck: 5 }
-            ];
-
-            let formattedDate =
-                (month < 10 ? "0" : "") + month + (day < 10 ? "0" : "") + day;
-
-            for (let period of luckPeriods) {
-                if (
-                    (formattedDate >= period.start && formattedDate <= period.end) ||
-                    (period.start === "1111" &&
-                        (formattedDate >= "1111" || formattedDate <= "0119"))
-                ) {
-                    return period.luck;
-                }
-            }
-            return "오류";
-        }
-
-        function getFiveElements(heavenlyStem, luck) {
-            const startingElements = {
-                "갑": "土", "기": "土",
-                "을": "金", "경": "금",
-                "병": "水", "신": "수",
-                "정": "木", "임": "목",
-                "무": "火", "계": "화"
-            };
-
-            const cycle = ["土", "金", "水", "木", "火"];
-            let startElement = startingElements[heavenlyStem];
-            let startIndex = cycle.indexOf(startElement);
-
-            return cycle[(startIndex + luck - 1) % 5];
-        }
-
-        function getImbalance(heavenlyStem) {
-            return ["갑", "병", "무", "경", "임"].includes(heavenlyStem)
-                ? "태과"
-                : "불급";
-        }
-
-        function getConstitution(fiveElements, imbalance) {
-            const mapping = {
-                "木": { "태과": "간실비허", "불급": "폐실간허" },
-                "火": { "태과": "심실폐허", "불급": "신실심허" },
-                "水": { "태과": "신실심허", "불급": "비실신허" },
-                "土": { "태과": "비실신허", "불급": "간실비허" },
-                "金": { "태과": "폐실간허", "불급": "심실폐허" }
-            };
-            return mapping[fiveElements][imbalance];
-        }
-
-        /************************************************************
-         * [새 함수] 출생일 일주(천간)만 계산
-         *   - 1900-01-31을 '갑자일'로 간주
-         *   - 지지(자,축…)는 붙이지 않고 천간만 돌려줍니다.
-         ************************************************************/
-        function getBirthDayPillar(year, month, day) {
-            const reference = new Date(1900, 0, 31); // 1900-01-31
-            const dateObj = new Date(year, month - 1, day);
-            let diff = Math.floor((dateObj - reference) / (1000 * 60 * 60 * 24));
-
-            // 10간 배열
-            const heavenlyStems = ["갑","을","병","정","무","기","경","신","임","계"];
-
-            // 60갑자 모듈로 (음수 보정)
-            let dayIndex = (diff % 60 + 60) % 60;
-            let dayStem = heavenlyStems[dayIndex % 10];
-
-            return dayStem; // 천간만 반환
-        }
-    </script>
+      // 표에 표시
+      document.getElementById("dayStemBranchCell").innerText = stem + branch; // 예: "임술"
+    }
+  </script>
 </head>
 <body>
-    <h2>체질판별</h2>
-    <label for="birthDate">생년월일(양력) 입력 (YYYYMMDD 형식):</label>
-    <input type="text" id="birthDate" maxlength="8" placeholder="예: 19820906">
-    <button onclick="calculateResults()">결과 확인</button>
+  <h2>간지력 라이브러리 (GanZhiJS) 예시</h2>
+  <label for="birthDate">생년월일(양력) 입력 (YYYYMMDD 형식):</label>
+  <input type="text" id="birthDate" maxlength="8" placeholder="예: 19820906" />
+  <button onclick="calculateDayStemBranch()">결과 확인</button>
 
-    <h3>결과:</h3>
-    <table>
-        <tr>
-            <th></th>
-            <th>출생일 - 후천체질</th>
-            <th>입태일 - 선천체질</th>
-        </tr>
-        <tr>
-            <td class="highlight">날짜</td>
-            <td id="birthDateCell"></td>
-            <td id="conceptionDateCell"></td>
-        </tr>
-        <tr>
-            <td>천간</td>
-            <td id="birthHeavenlyStemCell"></td>
-            <td id="conceptionHeavenlyStemCell"></td>
-        </tr>
-        <tr>
-            <td>운</td>
-            <td id="birthLuckCell"></td>
-            <td id="conceptionLuckCell"></td>
-        </tr>
-        <tr>
-            <td>오행</td>
-            <td id="birthElementCell"></td>
-            <td id="conceptionElementCell"></td>
-        </tr>
-        <tr>
-            <td>태과/불급</td>
-            <td id="birthImbalanceCell"></td>
-            <td id="conceptionImbalanceCell"></td>
-        </tr>
-        <tr>
-            <td class="category">체질</td>
-            <td id="birthConstitutionCell"></td>
-            <td id="conceptionConstitutionCell"></td>
-        </tr>
-        <!-- [새로운 행] 출생일 일주(천간) -->
-        <tr>
-            <td>출생일 일주(천간)</td>
-            <td id="birthDayPillarCell"></td>
-            <td></td>
-        </tr>
-    </table>
+  <h3>결과:</h3>
+  <table>
+    <tr>
+      <th>일주 (일간 + 일지)</th>
+    </tr>
+    <tr>
+      <td id="dayStemBranchCell"></td>
+    </tr>
+  </table>
 </body>
 </html>
