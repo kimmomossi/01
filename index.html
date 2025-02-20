@@ -1,8 +1,10 @@
+ㆍ
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>간지력 라이브러리 예시</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>정확한 일주 계산기</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -22,66 +24,62 @@
       background-color: #f2f2f2;
     }
   </style>
-
   <!-- GanZhiJS 라이브러리 (CDN) -->
   <script src="https://cdn.jsdelivr.net/gh/jxlwqq/GanZhiJS/dist/ganzhi.min.js"></script>
   <script>
-    function calculateDayStemBranch() {
+    function calculateDayPillar() {
       const birthDateInput = document.getElementById("birthDate").value;
       if (!/^\d{8}$/.test(birthDateInput)) {
-        alert("생년월일(양력)을 YYYYMMDD 형식으로 입력하세요.");
+        alert("생년월일을 YYYYMMDD 형식으로 입력하세요.");
         return;
       }
-
-      // 입력값 파싱
-      const birthYear = parseInt(birthDateInput.substring(0, 4));
-      const birthMonth = parseInt(birthDateInput.substring(4, 6));
-      const birthDay = parseInt(birthDateInput.substring(6, 8));
-
-      // GanZhiJS 사용: solar2lunar(년, 월, 일)
-      // - ganZhiDay 속성에 '임술' 같은 간지 정보가 들어있음
-      const result = GanZhiJS.solar2lunar(birthYear, birthMonth, birthDay);
-      // 예: result.ganZhiDay → "壬戌" (중국어 간지 표기)
-      //    "임술" 형태로 직접 표기하고 싶으면 수동 변환이 필요할 수 있음
-
-      // result.ganZhiDay 예: "壬戌"
-      // 한국어 표기 "임술"로 바꾸려면?
-      // - '壬' → '임', '戌' → '술' 매핑 테이블이 필요
-      const dayGanZhi = result.ganZhiDay; // 예: "壬戌"
-
-      // 한자 → 한글 치환용 매핑 (간단 예시)
-      const dayGanMap = {
+      
+      const year = parseInt(birthDateInput.substring(0, 4));
+      const month = parseInt(birthDateInput.substring(4, 6));
+      const day = parseInt(birthDateInput.substring(6, 8));
+      
+      // GanZhiJS의 solar2lunar 함수 사용
+      const result = GanZhiJS.solar2lunar(year, month, day);
+      // result.ganZhiDay 예: "壬辰"
+      const ganZhiDay = result.ganZhiDay;
+      
+      // 매핑 테이블: 중국어 간지를 한국어로 변환
+      const stemMap = {
         "甲": "갑", "乙": "을", "丙": "병", "丁": "정", "戊": "무",
         "己": "기", "庚": "경", "辛": "신", "壬": "임", "癸": "계"
       };
-      const dayZhiMap = {
+      const branchMap = {
         "子": "자", "丑": "축", "寅": "인", "卯": "묘", "辰": "진",
         "巳": "사", "午": "오", "未": "미", "申": "신", "酉": "유",
         "戌": "술", "亥": "해"
       };
-
-      // 예: "壬戌" → '壬' + '戌'
-      const stem = dayGanMap[ dayGanZhi[0] ] || dayGanZhi[0];
-      const branch = dayGanMap[ dayGanZhi[1] ] || dayZhiMap[ dayGanZhi[1] ] || dayGanZhi[1];
-
-      // 표에 표시
-      document.getElementById("dayStemBranchCell").innerText = stem + branch; // 예: "임술"
+      
+      let dayPillarKorean = "";
+      if (ganZhiDay && ganZhiDay.length >= 2) {
+        const stem = ganZhiDay.charAt(0);
+        const branch = ganZhiDay.charAt(1);
+        dayPillarKorean = (stemMap[stem] || stem) + (branchMap[branch] || branch);
+      } else {
+        dayPillarKorean = ganZhiDay;
+      }
+      
+      document.getElementById("dayPillarCell").innerText = dayPillarKorean;
     }
   </script>
 </head>
 <body>
-  <h2>간지력 라이브러리 (GanZhiJS) 예시</h2>
+  <h2>정확한 일주 계산기</h2>
   <label for="birthDate">생년월일(양력) 입력 (YYYYMMDD 형식):</label>
-  <input type="text" id="birthDate" maxlength="8" placeholder="예: 19820906" />
-  <button onclick="calculateDayStemBranch()">결과 확인</button>
-
+  <input type="text" id="birthDate" maxlength="8" placeholder="예: 19820906">
+  <button onclick="calculateDayPillar()">결과 확인</button>
+  
   <h3>결과:</h3>
   <table>
     <tr>
-      <th>일주 (일간 + 일지)</th>
+      <th>일주 (일간+지지)</th>
     </tr>
     <tr>
-      <td id="dayStemBranchCell"></td>
+      <td id="dayPillarCell"></td>
     </tr>
   </table>
 </body>
