@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>일주계산</title>
+    <title>정확한 일간 계산기</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,7 +27,7 @@
         function calculateDayStem() {
             let birthDateInput = document.getElementById("birthDate").value;
             if (!/^\d{8}$/.test(birthDateInput)) {
-                alert("생년월일(양력)을 YYYYMMDD 형식으로 입력하세요.");
+                alert("생년월일을 YYYYMMDD 형식으로 입력하세요.");
                 return;
             }
 
@@ -43,8 +43,8 @@
         function getCorrectDayStem(year, month, day) {
             const heavenlyStems = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
 
-            // 기준일을 1899년 12월 31일로 설정
-            let baseDate = new Date(1899, 11, 31);
+            // 1900년 1월 1일의 일간(천간) 기준으로 계산
+            let baseDate = new Date(1899, 11, 31); // 1900년 1월 1일 직전날
             let inputDate = new Date(year, month - 1, day);
             let dayDifference = Math.floor((inputDate - baseDate) / (1000 * 60 * 60 * 24));
 
@@ -55,7 +55,7 @@
     </script>
 </head>
 <body>
-    <h2>일주계산</h2>
+    <h2>정확한 일간(천간) 계산기</h2>
     <label for="birthDate">생년월일 입력 (YYYYMMDD 형식):</label>
     <input type="text" id="birthDate" maxlength="8" placeholder="예: 20250101">
     <button onclick="calculateDayStem()">결과 확인</button>
@@ -63,7 +63,7 @@
     <h3>결과:</h3>
     <table>
         <tr>
-            <th>일간</th>
+            <th>일간 (천간)</th>
         </tr>
         <tr>
             <td id="dayStemCell"></td>
@@ -71,3 +71,5 @@
     </table>
 </body>
 </html>
+
+일주계산
